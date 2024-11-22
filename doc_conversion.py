@@ -13,76 +13,78 @@ from nltk.tokenize import word_tokenize
 from nltk.corpus import stopwords  
 from nltk.stem import WordNetLemmatizer  
 
-# Importing job_description from a local module
+# Import example job description
 from job_description import job_description  
 
+# Convert a pdf to text
 def convert_pdf_to_text(pdf_filepath):
-    reader = pdf.PdfReader(pdf_filepath)  # Create a PDF reader object
+    reader = pdf.PdfReader(pdf_filepath)  
     text = ''
     for page in reader.pages:
-        text += page.extract_text()  # Extract text from each page
+        text += page.extract_text()  
     return text
 
-# Convert the PDF resume to text
 resume = convert_pdf_to_text('/Users/tanaymehrish/Downloads/TM.pdf')
 
+
+# Tokenize the text for analysis
 def tokenize(text):
     tokens = word_tokenize(text)  # Tokenize the text
     lemmatizer = WordNetLemmatizer()  # Create a lemmatizer object
 
     clean_tokens = []
     for tok in tokens:
-        clean_tok = lemmatizer.lemmatize(tok).lower().strip()  # Lemmatize, lowercase, and strip each token
+        clean_tok = lemmatizer.lemmatize(tok).lower().strip()  
         clean_tokens.append(clean_tok)
 
     return clean_tokens
 
-# Tokenize the resume text
+
 tokens = tokenize(resume)
-# Tokenize the job description text
 description_tokens = tokenize(job_description)
 
+
+# Extract email address from the resume using regex
 def get_contact():
-    email = re.findall(r'\S+@\S+', resume)  # Find all email addresses in the resume
+    email = re.findall(r'\S+@\S+', resume) 
     return email
 
-# Print the extracted email addresses
 email = get_contact()
+print(email)
 
 
-# Revised regex pattern to match Month Year format
+# Return all dates in the resume using a regex pattern
 def get_dates(tokens):
     processed_text = ' '.join(tokens)
 
     date_pattern = re.compile(
-    r'\b(?:January|February|March|April|May|June|July|August|September|October|November|December)\s+\d{4}\b',
-    re.IGNORECASE)
+    r'\b(?:january|february|march|april|may|june|july|august|september|october|november|december)\s+\d{4}\b')
 
-    # Find all matches
+    # Find all matches and format them
     dates = date_pattern.findall(processed_text)
-    # Convert matches to title case for consistent formatting
     formatted_dates = [date.title() for date in dates]
     return formatted_dates
 formatted_dates = get_dates(tokens)
 formatted_description_dates = get_dates(description_tokens) 
 
 
-# Make a pd.datetime to get today's date
+
+# Find the graduation date using the current date
 def find_grad(formatted_dates):
-    today = pd.to_datetime('today').date()
+    today = pd.to_datetime('today').date() # Use a pd.to_datetime() function to get the current date
     for date in formatted_dates:
         date = pd.to_datetime(date).date()  
         if date > today:
-            grad_date = date  # If the date is in the future, set it as the graduation date
-            print("Graduation Date: ", grad_date) 
+            grad_date = date  
+            #print("Graduation Date: ", grad_date) 
     return grad_date
 grad_date = find_grad(formatted_dates)
 
-# Find latest date in the job description
+# Find latest date in the job description and if there is no date, return None
 def find_latest(formatted_description_dates):
     if not formatted_description_dates:
         return None
-    latest_date = max(formatted_description_dates, key=lambda x: pd.to_datetime(x))
+    latest_date = max(formatted_description_dates, key=lambda x: pd.to_datetime(x)) # Use a lambda function for simple formatting
     return latest_date
 latest_date = find_latest(formatted_description_dates)
 
@@ -96,21 +98,22 @@ def get_eligibility(grad_date, latest_date):
         eligibility = "Candidate is not eligible for the job."
     return eligibility
 eligibility = get_eligibility(grad_date, latest_date)
+print(eligibility)
 
-# Find all matches in the resume
+# Return the filtered/cleaned matches between the resume and job description
 def get_matches(tokens, description_tokens):
     matches = []
     for token in tokens:
         if token in description_tokens:
-            matches.append(token)  # Append token to matches if it is in description_tokens
+            matches.append(token)  
 
     # Delete all spaces and special characters and remove repeats
-    matches = [re.sub(r'\W+', '', match) for match in matches]  # Remove non-word characters from each match
-    matches = list(set(matches))  # Remove duplicate matches by converting to a set and back to a list 
+    matches = [re.sub(r'\W+', '', match) for match in matches]  
+    matches = list(set(matches))  
 
     # Take out unnecessary words in matches
     stop_words = set(stopwords.words('english'))  # Create a set of stopwords
-    matches = [match for match in matches if match not in stop_words]  # Filter out stopwords
+    matches = [match for match in matches if match not in stop_words]  
     return matches
 matches = get_matches(tokens, description_tokens)
 print(matches)
