@@ -53,10 +53,10 @@ def update_output(contents):
 # Update the results section to display the eligibility, matches, and strength
 def update_output(upload_resume, upload_description):
     if upload_resume is None or upload_description is None:
-        return 'Please upload a resume and enter a job description.', '', ''
+        return 'Please upload a resume or enter a job description.', '', ''
     
     # Decode the base64 string
-    content_type, content_string = upload_resume.split(',')
+    content_type,content_string = upload_resume.split(',')
     decoded = base64.b64decode(content_string)
     pdf_content = io.BytesIO(decoded)
 
